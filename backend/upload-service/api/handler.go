@@ -1,4 +1,4 @@
-package handler
+package api
 
 import (
 	"fmt"
@@ -8,11 +8,11 @@ import (
 	"github.com/go-git/go-git/v5"
 )
 
-func Home(c *gin.Context) {
+func home(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Welcome to haven's upload service."})
 }
 
-func Upload(c *gin.Context) {
+func upload(c *gin.Context) {
 	var body struct {
 		Url string `json:"q"`
 	}
