@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-git/go-git/v5"
+	"github.com/onkarr19/haven/upload-service/utils"
 )
 
 func home(c *gin.Context) {
@@ -22,7 +23,8 @@ func upload(c *gin.Context) {
 		return
 	}
 
-	repo_id := "ndngdgn" // generate a unique id for the repo
+	// generates a random id (6 characters long)
+	repo_id := utils.GenerateID(6)
 	file_path := fmt.Sprintf("/tmp/repo/%s", repo_id)
 
 	if _, err := git.PlainClone(file_path, false, &git.CloneOptions{
