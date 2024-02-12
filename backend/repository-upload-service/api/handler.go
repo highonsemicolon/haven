@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-git/go-git/v5"
-	"github.com/onkarr19/haven/upload-service/utils"
+	"github.com/onkarr19/haven/repository-upload-service/utils"
 )
 
 func home(c *gin.Context) {

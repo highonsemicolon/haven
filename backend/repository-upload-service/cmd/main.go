@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/onkarr19/haven/upload-service/api"
+	"github.com/onkarr19/haven/repository-upload-service/api"
 )
 
 func main() {
