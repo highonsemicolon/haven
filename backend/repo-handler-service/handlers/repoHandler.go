@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/onkarr19/haven/repo-handler-service/models"
 	"github.com/onkarr19/haven/repo-handler-service/services"
 )
@@ -13,27 +13,23 @@ type RepoHandler struct {
 	repoService services.RepoService
 }
 
-func NewRepoHandler() *RepoHandler {
-	return &RepoHandler{
-		repoService: services.NewRepoService(),
-	}
+func NewRepoHandler(repoService services.RepoService) *RepoHandler {
+	return &RepoHandler{repoService: repoService}
 }
 
 func (h *RepoHandler) CreateRepo(c *gin.Context) {
-	repo := models.Repo{}
+	var repo models.Repo
 	if err := c.ShouldBindJSON(&repo); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Error(err).SetType(gin.ErrorTypePublic)
 		return
 	}
 
-	// Check if the repository name is unique
-	if exists := h.repoService.IsUniqueRepo(repo.Name); exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Repository name already exists"})
+	repo.ID = uuid.New()
+
+	if err := h.repoService.CreateRepo(&repo); err != nil {
+		c.Error(err).SetType(gin.ErrorTypePrivate)
 		return
 	}
 
-	repo.ID = 789
-
-	log.Printf("Creating project: %+v", repo)
 	c.JSON(http.StatusCreated, repo)
 }
