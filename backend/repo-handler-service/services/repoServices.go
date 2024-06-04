@@ -24,7 +24,7 @@ func NewRepoService(repoRepo repositories.RepoRepository) RepoService {
 }
 
 func (s *repoService) CreateRepo(repo *models.Repo) error {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		panic(err)
 	}
@@ -32,7 +32,7 @@ func (s *repoService) CreateRepo(repo *models.Repo) error {
 	ctx := context.Background()
 
 	resp, _ := cli.ContainerCreate(ctx, &container.Config{
-		Image:      "node:git",
+		Image:      "node:alpine",
 		WorkingDir: "/app",
 		Cmd:        []string{"sh", "-c", fmt.Sprintf("git clone %s . && npm install && npm run build", repo.GitURL)},
 	}, nil, nil, nil, "")
@@ -60,6 +60,7 @@ func (s *repoService) CreateRepo(repo *models.Repo) error {
 
 	//fmt.Println("Container removed successfully")
 	s.repoRepo.CreateRepo(repo)
+
 	return nil
 
 }
