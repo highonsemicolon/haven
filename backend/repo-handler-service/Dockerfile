@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:alpine
 
-RUN apt-get update && \
-    apt-get install -y git
+RUN apk update && \
+    apk add --no-cache git curl zip
