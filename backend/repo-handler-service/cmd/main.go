@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/onkarr19/haven/repo-handler-service/handlers"
 	"github.com/onkarr19/haven/repo-handler-service/models"
 	"github.com/onkarr19/haven/repo-handler-service/repositories"
@@ -34,6 +35,7 @@ func ConnectDatabase(sql gorm.Dialector, config *gorm.Config, models *models.Rep
 }
 
 func main() {
+	godotenv.Load()
 	r := gin.Default()
 	r.Use(ErrorHandler)
 
