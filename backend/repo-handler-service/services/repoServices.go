@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -25,30 +26,42 @@ func NewRepoService(repoRepo repositories.RepoRepository) RepoService {
 
 func (s *repoService) CreateRepo(repo *models.Repo) error {
 
-	bucketName := "s3-haven--use1-az4--x-s3"
-	objectKey := "abc.zip"
-
-	presignedURL, err := getPresignedURL(bucketName, objectKey)
+	// Generate a presigned URL
+	presignedURL, err := putPresignURL("zip-builds/" + repo.Name)
 	if err != nil {
 		return err
 	}
-
-	repo.PresignedURL = presignedURL
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		panic(err)
 	}
+	defer cli.Close()
 
 	ctx := context.Background()
 
-	resp, _ := cli.ContainerCreate(ctx, &container.Config{
+	config := &container.Config{
 		Image:      "nodewithgit",
 		WorkingDir: "/app",
-		Cmd: []string{"sh", "-c", fmt.Sprintf(`git clone %s . && npm install && npm run build && zip -r build-artifacts.zip build/* && 
-			curl --upload-file build-artifacts.zip "%s"`, repo.GitURL, repo.PresignedURL)},
-	}, nil, nil, nil, "")
+		Cmd: []string{
+			"sh", "-c",
+			fmt.Sprintf(`git clone %s . && npm install && npm run build && zip -r build-artifacts.zip build/* &&
+            curl --upload-file build-artifacts.zip "%s"`, repo.GitURL, presignedURL),
+		},
+	}
 
+	// Create a container
+	resp, err := cli.ContainerCreate(ctx, config, nil, nil, nil, "")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
+			log.Println("Failed to remove container:", err)
+		}
+	}()
+
+	// Start the container
 	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		panic(err)
 	}
@@ -66,11 +79,10 @@ func (s *repoService) CreateRepo(repo *models.Repo) error {
 	fmt.Println("Build completed successfully")
 
 	// Remove the container
-	// if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
-	// 	panic(err)
-	// }
+	if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
+		panic(err)
+	}
 
-	//fmt.Println("Container removed successfully")
 	s.repoRepo.CreateRepo(repo)
 
 	return nil

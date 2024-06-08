@@ -5,9 +5,9 @@ import (
 )
 
 type Repo struct {
-	ID           uuid.UUID `json:"id" gorm:"type:uuid;primaryKey" notnull:"true"`
-	Name         string    `json:"name" gorm:"unique" notnull:"true"`
-	GitURL       string    `json:"git_url" notnull:"true"`
-	PresignedURL string    `json:"presigned_url" notnull:"true"`
-	Comment      string    `json:"comment" gorm:"default:null"`
+	ID        uuid.UUID `json:"id" gorm:"type:uuid;primaryKey" notnull:"true"`
+	Name      string    `json:"name" gorm:"unique" notnull:"true"`
+	GitURL    string    `json:"git_url" notnull:"true"`
+	HostedURL string    `json:"hosted_url" gorm:"default:null"`
+	Comment   string    `json:"comment" gorm:"default:null"`
 }
