@@ -1,4 +1,4 @@
-module github.com/onkarr19/haven/repo-handler-service
+module github.com/onkarr19/haven/deployment-handler-service
 
 go 1.22.3
 

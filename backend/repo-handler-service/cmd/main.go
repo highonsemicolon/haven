@@ -5,10 +5,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/onkarr19/haven/repo-handler-service/handlers"
-	"github.com/onkarr19/haven/repo-handler-service/models"
-	"github.com/onkarr19/haven/repo-handler-service/repositories"
-	"github.com/onkarr19/haven/repo-handler-service/services"
+	"github.com/onkarr19/haven/deployment-handler-service/handlers"
+	"github.com/onkarr19/haven/deployment-handler-service/models"
+	"github.com/onkarr19/haven/deployment-handler-service/repositories"
+	"github.com/onkarr19/haven/deployment-handler-service/services"
 	"gorm.io/driver/sqlite"
 
 	"gorm.io/gorm"
@@ -21,7 +21,7 @@ func ErrorHandler(c *gin.Context) {
 	}
 }
 
-func ConnectDatabase(sql gorm.Dialector, config *gorm.Config, models *models.Repo) *gorm.DB {
+func ConnectDatabase(sql gorm.Dialector, config *gorm.Config, models *models.Deployment) *gorm.DB {
 	db, err := gorm.Open(sql, config)
 	if err != nil {
 		log.Fatalf("failed to connect database: %+v", err)
@@ -40,13 +40,13 @@ func main() {
 	r.Use(ErrorHandler)
 
 	sql := sqlite.Open("test.db")
-	db := ConnectDatabase(sql, &gorm.Config{}, &models.Repo{})
+	db := ConnectDatabase(sql, &gorm.Config{}, &models.Deployment{})
 
-	repoRepository := repositories.NewRepoRepository(db)
-	repoService := services.NewRepoService(repoRepository)
-	repoHandler := handlers.NewRepoHandler(repoService)
+	deploymentRepository := repositories.NewDeploymentRepository(db)
+	deploymentService := services.NewDeploymentService(deploymentRepository)
+	deploymentHandler := handlers.NewDeploymentHandler(deploymentService)
 
-	r.POST("/projects", repoHandler.CreateRepo)
+	r.POST("/projects", deploymentHandler.CreateDeployment)
 
 	r.Run("localhost:8080")
 }
