@@ -9,6 +9,7 @@ import (
 
 type RepoRepository interface {
 	CreateRepo(repo *models.Repo) error
+	GetRepoByName(name string) (*models.Repo, error)
 }
 
 type repoRepository struct {
@@ -22,4 +23,10 @@ func NewRepoRepository(db *gorm.DB) RepoRepository {
 func (p *repoRepository) CreateRepo(repo *models.Repo) error {
 	fmt.Println("Creating repo...")
 	return p.db.Create(repo).Error
+}
+
+func (p *repoRepository) GetRepoByName(name string) (*models.Repo, error) {
+	repo := &models.Repo{}
+	err := p.db.Where("name = ?", name).First(repo).Error
+	return repo, err
 }

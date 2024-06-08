@@ -13,7 +13,6 @@ import (
 
 type RepoService interface {
 	CreateRepo(repo *models.Repo) error
-	IsUniqueRepo(name string) bool
 }
 
 type repoService struct {
@@ -25,6 +24,11 @@ func NewRepoService(repoRepo repositories.RepoRepository) RepoService {
 }
 
 func (s *repoService) CreateRepo(repo *models.Repo) error {
+
+	// Check if repo.Name already exists
+	if _, err := s.repoRepo.GetRepoByName(repo.Name); err == nil {
+		return fmt.Errorf("project with name %s already exists", repo.Name)
+	}
 
 	// Generate a presigned URL
 	presignedURL, err := putPresignURL("zip-builds/" + repo.Name)
@@ -45,7 +49,7 @@ func (s *repoService) CreateRepo(repo *models.Repo) error {
 		WorkingDir: "/app",
 		Cmd: []string{
 			"sh", "-c",
-			fmt.Sprintf(`git clone %s . && npm install && npm run build && zip -r build-artifacts.zip build/* &&
+			fmt.Sprintf(`git clone "%s" . && npm install && npm run build && zip -r build-artifacts.zip build/* &&
             curl --upload-file build-artifacts.zip "%s"`, repo.GitURL, presignedURL),
 		},
 	}
@@ -87,9 +91,4 @@ func (s *repoService) CreateRepo(repo *models.Repo) error {
 
 	return nil
 
-}
-
-func (s *repoService) IsUniqueRepo(name string) bool {
-	// TODO: check if the repository name already does not exists
-	return true
 }
