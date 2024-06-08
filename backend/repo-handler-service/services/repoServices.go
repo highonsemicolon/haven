@@ -80,13 +80,6 @@ func (s *repoService) CreateRepo(repo *models.Repo) error {
 	case <-statusCh:
 	}
 
-	fmt.Println("Build completed successfully")
-
-	// Remove the container
-	if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
-		panic(err)
-	}
-
 	s.repoRepo.CreateRepo(repo)
 
 	return nil
