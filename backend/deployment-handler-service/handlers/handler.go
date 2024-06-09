@@ -33,3 +33,15 @@ func (h *DeploymentHandler) CreateDeployment(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, deployment)
 }
+
+func (h *DeploymentHandler) GetDeployment(c *gin.Context) {
+
+	name := c.Param("name")
+	deployment, err := h.deploymentService.GetDeploymentByName(name)
+	if err != nil {
+		c.Error(err).SetType(gin.ErrorTypePrivate)
+		return
+	}
+
+	c.JSON(http.StatusOK, deployment)
+}

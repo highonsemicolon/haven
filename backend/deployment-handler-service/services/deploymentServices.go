@@ -13,6 +13,7 @@ import (
 
 type DeploymentService interface {
 	CreateDeployment(*models.Deployment) error
+	GetDeploymentByName(string) (*models.Deployment, error)
 }
 
 type deploymentService struct {
@@ -84,4 +85,8 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 
 	return nil
 
+}
+
+func (s *deploymentService) GetDeploymentByName(name string) (*models.Deployment, error) {
+	return s.deploymentRepo.GetDeploymentByName(name)
 }
