@@ -31,7 +31,7 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 	}
 
 	// Generate a presigned URL
-	presignedURL, err := putPresignURL("zip-builds/" + deployment.Name)
+	presignedURL, err := putPresignURL(deployment.Name)
 	if err != nil {
 		return err
 	}
