@@ -46,7 +46,8 @@ func main() {
 	deploymentService := services.NewDeploymentService(deploymentRepository)
 	deploymentHandler := handlers.NewDeploymentHandler(deploymentService)
 
-	r.POST("/projects", deploymentHandler.CreateDeployment)
+	r.POST("/project", deploymentHandler.CreateDeployment)
+	r.GET("/project/:name", deploymentHandler.GetDeployment)
 
 	r.Run("localhost:8080")
 }
