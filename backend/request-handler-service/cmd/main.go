@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/onkarr19/haven/request-handler-service/handlers"
+	"github.com/onkarr19/haven/request-handler-service/services"
 )
 
 func ErrorHandler(c *gin.Context) {
@@ -16,9 +17,10 @@ func main() {
 	r := gin.Default()
 	r.Use(ErrorHandler)
 
-	requestHandler := handlers.NewRequestHandler()
+	requestService := services.NewRequestService()
+	requestHandler := handlers.NewRequestHandler(requestService)
 
-	r.GET("", requestHandler.GetDeployment)
+	r.GET("/", requestHandler.GetDeployment)
 
 	r.Run("localhost:8080")
 }

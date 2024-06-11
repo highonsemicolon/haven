@@ -1,23 +1,22 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/onkarr19/haven/request-handler-service/services"
 )
 
 type RequestHandler struct {
+	requestService services.RequestService
 }
 
-func NewRequestHandler() *RequestHandler {
-	return &RequestHandler{}
+func NewRequestHandler(requestService services.RequestService) *RequestHandler {
+	return &RequestHandler{requestService: requestService}
 }
 
 func (h *RequestHandler) GetDeployment(c *gin.Context) {
-
-	fmt.Println("Inside GetDeployment")
-	fmt.Printf("host: %+v\n", c.Request.Host)
-
-	c.JSON(http.StatusOK, gin.H{})
+	host := c.Request.Host
+	subdomain := h.requestService.GetSubdomain(host)
+	c.JSON(http.StatusOK, gin.H{"subdomain": subdomain})
 }
