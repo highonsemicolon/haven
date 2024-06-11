@@ -20,7 +20,7 @@ def lambda_handler(event, context):
         with zipfile.ZipFile(BytesIO(zip_data)) as zip_ref:
             for file_name in zip_ref.namelist():
                 file_data = zip_ref.read(file_name)
-                destination_key = f"{object_key}/{file_name.replace('build', '', 1)}"
+                destination_key = file_name.replace('build', object_key, 1)
 
                 # Upload each unzipped file to destination bucket
                 s3_client.put_object(Body=file_data, Bucket=DESTINATION_BUCKET_NAME, Key=destination_key)
