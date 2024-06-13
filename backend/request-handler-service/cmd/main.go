@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/onkarr19/haven/request-handler-service/handlers"
 	"github.com/onkarr19/haven/request-handler-service/repositories"
@@ -18,11 +20,14 @@ func main() {
 	r := gin.Default()
 	r.Use(ErrorHandler)
 
-	s3Repo, _ := repositories.NewS3Repository("", "")
+	region := os.Getenv("AWS_REGION")
+	bucket := os.Getenv("DEPLOYMENT_BUCKET")
+
+	s3Repo, _ := repositories.NewS3Repository(region, bucket)
 	requestService := services.NewRequestService(s3Repo)
 	requestHandler := handlers.NewRequestHandler(requestService)
 
-	r.GET("/", requestHandler.GetDeployment)
+	r.NoRoute(requestHandler.GetDeployment)
 
 	r.Run("localhost:8080")
 }
