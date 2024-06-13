@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"strings"
 
@@ -10,8 +9,8 @@ import (
 )
 
 type RequestService interface {
-	GetSubdomain(host string) string
-	GetDeploymentContent(ctx context.Context, subdomain string) (io.ReadCloser, string, error)
+	GetSubdomain(string) string
+	GetDeploymentContent(context.Context, string, string) (io.ReadCloser, string, error)
 }
 
 type requestService struct {
@@ -31,8 +30,7 @@ func (s *requestService) GetSubdomain(host string) string {
 	return ""
 }
 
-func (s *requestService) GetDeploymentContent(ctx context.Context, subdomain string) (io.ReadCloser, string, error) {
-	key := subdomain + "/index.html"
-	fmt.Println("Key: ", key)
+func (s *requestService) GetDeploymentContent(ctx context.Context, subdomain, path string) (io.ReadCloser, string, error) {
+	key := subdomain + path
 	return s.s3Repo.GetObject(ctx, key)
 }

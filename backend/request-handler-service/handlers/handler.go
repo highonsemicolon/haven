@@ -19,8 +19,13 @@ func NewRequestHandler(requestService services.RequestService) *RequestHandler {
 func (h *RequestHandler) GetDeployment(c *gin.Context) {
 	host := c.Request.Host
 	subdomain := h.requestService.GetSubdomain(host)
+	
+	path := c.Request.URL.Path
+	if path == "/" {
+		path = "/index.html"
+	}
 
-	content, contentType, err := h.requestService.GetDeploymentContent(context.Background(), subdomain)
+	content, contentType, err := h.requestService.GetDeploymentContent(context.Background(), subdomain, path)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get deployment content"})
 		return
