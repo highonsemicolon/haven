@@ -3,7 +3,7 @@ import os
 import zipfile
 from io import BytesIO
 
-DESTINATION_BUCKET_NAME = os.environ['DESTINATION_BUCKET']
+DEPLOYMENT_BUCKET = os.environ['DEPLOYMENT_BUCKET']
 
 s3_client = boto3.client('s3')
 
@@ -23,7 +23,7 @@ def lambda_handler(event, context):
                 destination_key = file_name.replace('build', object_key, 1)
 
                 # Upload each unzipped file to destination bucket
-                s3_client.put_object(Body=file_data, Bucket=DESTINATION_BUCKET_NAME, Key=destination_key)
+                s3_client.put_object(Body=file_data, Bucket=DEPLOYMENT_BUCKET, Key=destination_key)
         
         return {
             'statusCode': 200,
