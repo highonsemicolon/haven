@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,14 +23,22 @@ func NewDeploymentHandler(deploymentService services.DeploymentService, logger *
 func (h *DeploymentHandler) CreateDeployment(c *gin.Context) {
 	var deployment models.Deployment
 	if err := c.ShouldBindJSON(&deployment); err != nil {
-		c.Error(err).SetType(gin.ErrorTypePublic)
+		h.logger.Errorf("failed to bind JSON: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	existingDeployment, _ := h.deploymentService.GetDeploymentByName(deployment.Name)
+	if existingDeployment != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("deployment with name %s already exists", deployment.Name)})
 		return
 	}
 
 	deployment.ID = uuid.New()
 
 	if err := h.deploymentService.CreateDeployment(&deployment); err != nil {
-		c.Error(err).SetType(gin.ErrorTypePrivate)
+		h.logger.Errorf("failed to create deployment: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create deployment"})
 		return
 	}
 

@@ -19,7 +19,6 @@ func NewDeploymentRepository(db *gorm.DB) DeploymentRepository {
 }
 
 func (r *deploymentRepository) CreateDeployment(deployment *models.Deployment) error {
-	deployment.HostedURL = "https://" + deployment.Name + ".haven.app"
 	return r.db.Create(deployment).Error
 }
 

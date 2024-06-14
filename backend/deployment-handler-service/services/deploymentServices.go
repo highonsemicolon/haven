@@ -27,20 +27,15 @@ func NewDeploymentService(deploymentRepo repositories.DeploymentRepository) Depl
 
 func (s *deploymentService) CreateDeployment(deployment *models.Deployment) error {
 
-	// Check if deployment.Name already exists
-	if _deployment, err := s.deploymentRepo.GetDeploymentByName(deployment.Name); _deployment != nil && err == nil {
-		return fmt.Errorf("project with name %s already exists", deployment.Name)
-	}
-
 	// Generate a presigned URL
 	presignedURL, err := putPresignURL(deployment.Name)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error generating presigned URL")
 	}
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		return errors.Wrap(err, "error initializing Docker client")
 	}
 	defer cli.Close()
 
@@ -59,7 +54,8 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 	// Create a container
 	resp, err := cli.ContainerCreate(ctx, config, nil, nil, nil, "")
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating Docker container")
+
 	}
 	defer func() {
 		if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
@@ -69,7 +65,7 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 
 	// Start the container
 	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
-		panic(err)
+		return errors.Wrap(err, "error starting Docker container")
 	}
 
 	// Wait for the container to finish
@@ -77,15 +73,19 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 	select {
 	case err := <-errCh:
 		if err != nil {
-			panic(err)
+			return errors.Wrap(err, "error waiting for Docker container to finish")
 		}
 	case <-statusCh:
 	}
 
-	s.deploymentRepo.CreateDeployment(deployment)
+	// set the hosted URL for deployment
+	deployment.HostedURL = "https://" + deployment.Name + ".haven.app"
 
+	// Save the deployment to the repository
+	if err := s.deploymentRepo.CreateDeployment(deployment); err != nil {
+		return errors.Wrap(err, "error saving deployment to repository")
+	}
 	return nil
-
 }
 
 func (s *deploymentService) GetDeploymentByName(name string) (*models.Deployment, error) {
