@@ -14,6 +14,13 @@ import (
 	"gorm.io/gorm"
 )
 
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+}
+
 func ErrorHandler(c *gin.Context) {
 	c.Next()
 	if len(c.Errors) > 0 {
@@ -35,7 +42,6 @@ func ConnectDatabase(sql gorm.Dialector, config *gorm.Config, models *models.Dep
 }
 
 func main() {
-	godotenv.Load()
 	r := gin.Default()
 	r.Use(ErrorHandler)
 
