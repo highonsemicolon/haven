@@ -18,13 +18,19 @@ func NewDeploymentRepository(db *gorm.DB) DeploymentRepository {
 	return &deploymentRepository{db: db}
 }
 
-func (p *deploymentRepository) CreateDeployment(deployment *models.Deployment) error {
+func (r *deploymentRepository) CreateDeployment(deployment *models.Deployment) error {
 	deployment.HostedURL = "https://" + deployment.Name + ".haven.app"
-	return p.db.Create(deployment).Error
+	return r.db.Create(deployment).Error
 }
 
-func (p *deploymentRepository) GetDeploymentByName(name string) (*models.Deployment, error) {
+func (r *deploymentRepository) GetDeploymentByName(name string) (*models.Deployment, error) {
 	deployment := &models.Deployment{}
-	err := p.db.Where("name = ?", name).First(deployment).Error
-	return deployment, err
+	err := r.db.Where("name = ?", name).First(deployment).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return deployment, nil
 }

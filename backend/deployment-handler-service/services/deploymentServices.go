@@ -9,6 +9,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/onkarr19/haven/deployment-handler-service/models"
 	"github.com/onkarr19/haven/deployment-handler-service/repositories"
+	"github.com/pkg/errors"
 )
 
 type DeploymentService interface {
@@ -27,7 +28,7 @@ func NewDeploymentService(deploymentRepo repositories.DeploymentRepository) Depl
 func (s *deploymentService) CreateDeployment(deployment *models.Deployment) error {
 
 	// Check if deployment.Name already exists
-	if _, err := s.deploymentRepo.GetDeploymentByName(deployment.Name); err == nil {
+	if _deployment, err := s.deploymentRepo.GetDeploymentByName(deployment.Name); _deployment != nil && err == nil {
 		return fmt.Errorf("project with name %s already exists", deployment.Name)
 	}
 
@@ -88,5 +89,9 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 }
 
 func (s *deploymentService) GetDeploymentByName(name string) (*models.Deployment, error) {
-	return s.deploymentRepo.GetDeploymentByName(name)
+	deployment, err := s.deploymentRepo.GetDeploymentByName(name)
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting deployment by name")
+	}
+	return deployment, nil
 }

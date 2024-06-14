@@ -9,7 +9,9 @@ import (
 	"github.com/onkarr19/haven/deployment-handler-service/models"
 	"github.com/onkarr19/haven/deployment-handler-service/repositories"
 	"github.com/onkarr19/haven/deployment-handler-service/services"
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
+	"gorm.io/gorm/logger"
 
 	"gorm.io/gorm"
 )
@@ -46,11 +48,11 @@ func main() {
 	r.Use(ErrorHandler)
 
 	sql := sqlite.Open("test.db")
-	db := ConnectDatabase(sql, &gorm.Config{}, &models.Deployment{})
+	db := ConnectDatabase(sql, &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)}, &models.Deployment{})
 
 	deploymentRepository := repositories.NewDeploymentRepository(db)
 	deploymentService := services.NewDeploymentService(deploymentRepository)
-	deploymentHandler := handlers.NewDeploymentHandler(deploymentService)
+	deploymentHandler := handlers.NewDeploymentHandler(deploymentService, logrus.New())
 
 	r.POST("/project", deploymentHandler.CreateDeployment)
 	r.GET("/project/:name", deploymentHandler.GetDeployment)

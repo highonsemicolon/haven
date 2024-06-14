@@ -7,14 +7,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/onkarr19/haven/deployment-handler-service/models"
 	"github.com/onkarr19/haven/deployment-handler-service/services"
+	"github.com/sirupsen/logrus"
 )
 
 type DeploymentHandler struct {
 	deploymentService services.DeploymentService
+	logger            *logrus.Logger
 }
 
-func NewDeploymentHandler(deploymentService services.DeploymentService) *DeploymentHandler {
-	return &DeploymentHandler{deploymentService: deploymentService}
+func NewDeploymentHandler(deploymentService services.DeploymentService, logger *logrus.Logger) *DeploymentHandler {
+	return &DeploymentHandler{deploymentService: deploymentService, logger: logger}
 }
 
 func (h *DeploymentHandler) CreateDeployment(c *gin.Context) {
@@ -37,9 +39,20 @@ func (h *DeploymentHandler) CreateDeployment(c *gin.Context) {
 func (h *DeploymentHandler) GetDeployment(c *gin.Context) {
 
 	name := c.Param("name")
+	if name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Deployment name is required"})
+		return
+	}
+
 	deployment, err := h.deploymentService.GetDeploymentByName(name)
 	if err != nil {
-		c.Error(err).SetType(gin.ErrorTypePrivate)
+		h.logger.Errorf("failed to get deployment by name %s: %v", name, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get deployment"})
+		return
+	}
+
+	if deployment == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Deployment not found"})
 		return
 	}
 

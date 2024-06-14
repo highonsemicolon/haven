@@ -5,6 +5,7 @@ go 1.22.3
 require (
 	github.com/docker/docker v26.1.3+incompatible
 	github.com/gin-gonic/gin v1.10.0
+	github.com/sirupsen/logrus v1.9.3
 	gorm.io/driver/sqlite v1.5.5
 	gorm.io/gorm v1.25.10
 )
