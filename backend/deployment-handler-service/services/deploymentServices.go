@@ -51,7 +51,7 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 		Cmd: []string{
 			"sh", "-c",
 			fmt.Sprintf(`git clone "%s" . && npm install && npm run build && zip -r build-artifacts.zip build/* &&
-            curl --upload-file build-artifacts.zip "%s"`, deployment.GitURL, presignedURL),
+		            curl --upload-file build-artifacts.zip "%s"`, deployment.GitURL, presignedURL),
 		},
 	}
 
