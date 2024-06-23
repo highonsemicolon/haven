@@ -35,6 +35,9 @@ func (h *DeploymentHandler) CreateDeployment(c *gin.Context) {
 	}
 
 	deployment.ID = uuid.New()
+	if deployment.Branch == "" {
+		deployment.Branch = "main"
+	}
 
 	if err := h.deploymentService.CreateDeployment(&deployment); err != nil {
 		h.logger.Errorf("failed to create deployment: %v", err)

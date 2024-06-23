@@ -46,8 +46,8 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 		WorkingDir: "/app",
 		Cmd: []string{
 			"sh", "-c",
-			fmt.Sprintf(`git clone "%s" . && npm install && npm run build && zip -r build-artifacts.zip build/* &&
-		            curl --upload-file build-artifacts.zip "%s"`, deployment.GitURL, presignedURL),
+			fmt.Sprintf(`git clone -b "%s" "%s" . && npm install && npm run build && zip -r build-artifacts.zip build/* &&
+		            curl --upload-file build-artifacts.zip "%s"`, deployment.Branch, deployment.GitURL, presignedURL),
 		},
 	}
 
