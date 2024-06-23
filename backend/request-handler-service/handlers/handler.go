@@ -1,36 +1,24 @@
 package handlers
 
 import (
-	"context"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/onkarr19/haven/request-handler-service/services"
 )
 
-type RequestHandler struct {
-	requestService services.RequestService
+type ProxyHandler struct {
+	requestService services.ProxyService
 }
 
-func NewRequestHandler(requestService services.RequestService) *RequestHandler {
-	return &RequestHandler{requestService: requestService}
+func NewProxyHandler(requestService services.ProxyService) *ProxyHandler {
+	return &ProxyHandler{requestService: requestService}
 }
 
-func (h *RequestHandler) GetDeployment(c *gin.Context) {
-	host := c.Request.Host
-	subdomain := h.requestService.GetSubdomain(host)
-	
+func (h *ProxyHandler) HandleProxy(c *gin.Context) {
+
 	path := c.Request.URL.Path
 	if path == "/" {
 		path = "/index.html"
 	}
 
-	content, contentType, err := h.requestService.GetDeploymentContent(context.Background(), subdomain, path)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get deployment content"})
-		return
-	}
-	defer content.Close()
-
-	c.DataFromReader(http.StatusOK, -1, contentType, content, nil)
+	h.requestService.ProxyRequest(c, path)
 }

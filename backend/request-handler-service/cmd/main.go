@@ -20,14 +20,13 @@ func main() {
 	r := gin.Default()
 	r.Use(ErrorHandler)
 
-	region := os.Getenv("AWS_REGION")
-	bucket := os.Getenv("DEPLOYMENT_BUCKET")
+	base_path := os.Getenv("BASE_PATH")
 
-	s3Repo, _ := repositories.NewS3Repository(region, bucket)
-	requestService := services.NewRequestService(s3Repo)
-	requestHandler := handlers.NewRequestHandler(requestService)
+	s3Repo, _ := repositories.NewProxyRepository(base_path)
+	requestService := services.NewProxyService(s3Repo)
+	requestHandler := handlers.NewProxyHandler(requestService)
 
-	r.NoRoute(requestHandler.GetDeployment)
+	r.NoRoute(requestHandler.HandleProxy)
 
 	r.Run("localhost:8080")
 }

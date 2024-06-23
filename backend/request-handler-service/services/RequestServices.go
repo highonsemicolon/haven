@@ -1,36 +1,52 @@
 package services
 
 import (
-	"context"
-	"io"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/onkarr19/haven/request-handler-service/repositories"
 )
 
-type RequestService interface {
-	GetSubdomain(string) string
-	GetDeploymentContent(context.Context, string, string) (io.ReadCloser, string, error)
+type ProxyService interface {
+	ProxyRequest(*gin.Context, string)
 }
 
-type requestService struct {
-	s3Repo repositories.S3Repository
+type proxyService struct {
+	proxyRepo repositories.ProxyRepository
 }
 
-func NewRequestService(s3repo repositories.S3Repository) RequestService {
-	return &requestService{s3Repo: s3repo}
+func NewProxyService(s3repo repositories.ProxyRepository) ProxyService {
+	return &proxyService{proxyRepo: s3repo}
 }
 
-func (s *requestService) GetSubdomain(host string) string {
-	parts := strings.Split(host, ".")
+func (s *proxyService) ProxyRequest(c *gin.Context, path string) {
+	hostname := c.Request.Host
+	subdomain := strings.Split(hostname, ".")[0]
 
-	if len(parts) > 2 {
-		return strings.Join(parts[:len(parts)-2], ".")
-	}
-	return ""
-}
-
-func (s *requestService) GetDeploymentContent(ctx context.Context, subdomain, path string) (io.ReadCloser, string, error) {
 	key := subdomain + path
-	return s.s3Repo.GetObject(ctx, key)
+	resTo := s.proxyRepo.GetObjectURL(key)
+
+	target, err := url.Parse(resTo)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid target URL"})
+		return
+	}
+
+	proxy := httputil.NewSingleHostReverseProxy(target)
+	proxy.Director = func(req *http.Request) {
+		req.Host = target.Host
+		req.URL.Scheme = target.Scheme
+		req.URL.Host = target.Host
+		req.URL.Path = target.Path
+		req.URL.RawQuery = target.RawQuery
+	}
+
+	proxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, err error) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Proxy error", "details": err.Error()})
+	}
+
+	proxy.ServeHTTP(c.Writer, c.Request)
 }
