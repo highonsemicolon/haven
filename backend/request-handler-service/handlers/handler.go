@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/onkarr19/haven/request-handler-service/services"
+	"github.com/onkarr19/haven/proxy-service/services"
 )
 
 type ProxyHandler struct {

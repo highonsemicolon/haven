@@ -4,9 +4,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/onkarr19/haven/request-handler-service/handlers"
-	"github.com/onkarr19/haven/request-handler-service/repositories"
-	"github.com/onkarr19/haven/request-handler-service/services"
+	"github.com/onkarr19/haven/proxy-service/handlers"
+	"github.com/onkarr19/haven/proxy-service/repositories"
+	"github.com/onkarr19/haven/proxy-service/services"
 )
 
 func ErrorHandler(c *gin.Context) {

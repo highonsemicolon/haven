@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/onkarr19/haven/request-handler-service/repositories"
+	"github.com/onkarr19/haven/proxy-service/repositories"
 )
 
 type ProxyService interface {
