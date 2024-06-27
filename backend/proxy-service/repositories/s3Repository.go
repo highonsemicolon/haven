@@ -8,11 +8,10 @@ type proxyRepository struct {
 	base_path string
 }
 
-func NewProxyRepository(base_path string) (ProxyRepository, error) {
-
+func NewProxyRepository(base_path string) ProxyRepository {
 	return &proxyRepository{
 		base_path: base_path,
-	}, nil
+	}
 }
 
 func (p *proxyRepository) GetObjectURL(key string) string {

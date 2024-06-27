@@ -22,7 +22,7 @@ func main() {
 
 	base_path := os.Getenv("BASE_PATH")
 
-	s3Repo, _ := repositories.NewProxyRepository(base_path)
+	s3Repo := repositories.NewProxyRepository(base_path)
 	requestService := services.NewProxyService(s3Repo)
 	requestHandler := handlers.NewProxyHandler(requestService)
 
