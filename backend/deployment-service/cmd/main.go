@@ -50,12 +50,16 @@ func main() {
 
 	sql := sqlite.Open("test.db")
 	db, sqlDB, err := repositories.ConnectDatabase(sql, &gorm.Config{Logger: gormLogger.Default.LogMode(gormLogger.Silent)}, &models.Deployment{})
-	defer sqlDB.Close()
 	if err != nil {
 		logger.Fatalf("failed to connect database: %+v", err)
 	} else {
 		logger.Info("Database connected")
 	}
+	defer func() {
+		if err := sqlDB.Close(); err != nil {
+			logger.Errorf("Error closing database connection: %v", err)
+		}
+	}()
 
 	deploymentRepository := repositories.NewDeploymentRepository(db)
 	deploymentService := services.NewDeploymentService(deploymentRepository, rds, logger)
