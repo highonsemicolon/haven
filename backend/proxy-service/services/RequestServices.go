@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/onkarr19/haven/proxy-service/repositories"
+	"github.com/sirupsen/logrus"
 )
 
 type ProxyService interface {
@@ -16,10 +17,11 @@ type ProxyService interface {
 
 type proxyService struct {
 	proxyRepo repositories.ProxyRepository
+	logger    *logrus.Logger
 }
 
-func NewProxyService(s3repo repositories.ProxyRepository) ProxyService {
-	return &proxyService{proxyRepo: s3repo}
+func NewProxyService(s3repo repositories.ProxyRepository, logger *logrus.Logger) ProxyService {
+	return &proxyService{proxyRepo: s3repo, logger: logger}
 }
 
 func (s *proxyService) ProxyRequest(c *gin.Context, path string) {
@@ -31,6 +33,7 @@ func (s *proxyService) ProxyRequest(c *gin.Context, path string) {
 
 	target, err := url.Parse(resTo)
 	if err != nil {
+		s.logger.Errorf("failed to parse URL: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid target URL"})
 		return
 	}
@@ -45,6 +48,7 @@ func (s *proxyService) ProxyRequest(c *gin.Context, path string) {
 	}
 
 	proxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, err error) {
+		s.logger.Errorf("proxy error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Proxy error", "details": err.Error()})
 	}
 
