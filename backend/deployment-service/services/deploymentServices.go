@@ -10,6 +10,7 @@ import (
 	"github.com/onkarr19/haven/deployment-handler-service/models"
 	"github.com/onkarr19/haven/deployment-handler-service/repositories"
 	"github.com/pkg/errors"
+	"github.com/redis/go-redis/v9"
 )
 
 type DeploymentService interface {
@@ -19,13 +20,18 @@ type DeploymentService interface {
 
 type deploymentService struct {
 	deploymentRepo repositories.DeploymentRepository
+	rds            *redis.Client
 }
 
-func NewDeploymentService(deploymentRepo repositories.DeploymentRepository) DeploymentService {
-	return &deploymentService{deploymentRepo: deploymentRepo}
+func NewDeploymentService(deploymentRepo repositories.DeploymentRepository, redis *redis.Client) DeploymentService {
+	return &deploymentService{deploymentRepo: deploymentRepo, rds: redis}
 }
 
 func (s *deploymentService) CreateDeployment(deployment *models.Deployment) error {
+	return nil
+}
+
+func (s *deploymentService) CreateDeploymentbackup(deployment *models.Deployment) error {
 
 	// Generate a presigned URL
 	presignedURL, err := putPresignURL(deployment.Name)
