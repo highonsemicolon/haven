@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/docker/docker/api/types/container"
@@ -10,7 +11,6 @@ import (
 	"github.com/onkarr19/haven/deployment-handler-service/repositories"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
-	"github.com/sirupsen/logrus"
 )
 
 type DeploymentService interface {
@@ -21,14 +21,21 @@ type DeploymentService interface {
 type deploymentService struct {
 	deploymentRepo repositories.DeploymentRepository
 	rds            *redis.Client
-	logger         *logrus.Logger
+	ctx            context.Context
 }
 
-func NewDeploymentService(deploymentRepo repositories.DeploymentRepository, redis *redis.Client, logger *logrus.Logger) DeploymentService {
-	return &deploymentService{deploymentRepo: deploymentRepo, rds: redis, logger: logger}
+func NewDeploymentService(deploymentRepo repositories.DeploymentRepository, redis *redis.Client) DeploymentService {
+	return &deploymentService{deploymentRepo: deploymentRepo, rds: redis}
 }
 
 func (s *deploymentService) CreateDeployment(deployment *models.Deployment) error {
+	job, err := json.Marshal(deployment)
+	if err != nil {
+		return errors.Wrap(err, "error marshalling job to JSON")
+	}
+	if _, err := s.rds.RPush(s.ctx, "builder", job).Result(); err != nil {
+		return errors.Wrap(err, "error pushing job to Redis")
+	}
 	return nil
 }
 
@@ -37,7 +44,6 @@ func (s *deploymentService) CreateDeploymentbackup(deployment *models.Deployment
 	// Generate a presigned URL
 	presignedURL, err := putPresignURL(deployment.Name)
 	if err != nil {
-		s.logger.Error("Failed to generate presigned URL:", err)
 		return errors.Wrap(err, "error generating presigned URL")
 	}
 
@@ -66,7 +72,7 @@ func (s *deploymentService) CreateDeploymentbackup(deployment *models.Deployment
 	}
 	defer func() {
 		if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
-			s.logger.Error("Failed to remove container:", err)
+			errors.Wrap(err, "error removing Docker container")
 		}
 	}()
 

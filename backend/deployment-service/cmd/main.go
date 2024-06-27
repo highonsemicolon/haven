@@ -63,7 +63,7 @@ func main() {
 	}()
 
 	deploymentRepository := repositories.NewDeploymentRepository(db)
-	deploymentService := services.NewDeploymentService(deploymentRepository, rds, logger)
+	deploymentService := services.NewDeploymentService(deploymentRepository, rds)
 	deploymentHandler := handlers.NewDeploymentHandler(deploymentService, logger)
 
 	r.POST("/project", deploymentHandler.CreateDeployment)
