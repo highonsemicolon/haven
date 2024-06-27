@@ -16,6 +16,7 @@ import (
 )
 
 var logger *logrus.Logger
+var rds *redis.Client
 
 func init() {
 	logger = logrus.New()
@@ -25,6 +26,15 @@ func init() {
 	if err != nil {
 		logger.Errorf("Error loading .env file: %v", err)
 	}
+
+	rdsConfig := &redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	}
+
+	rds = redis.NewClient(rdsConfig)
+	defer rds.Close()
 }
 
 func ErrorHandler(c *gin.Context) {
@@ -38,15 +48,6 @@ func main() {
 
 	r := gin.Default()
 	r.Use(ErrorHandler)
-
-	rdsConfig := &redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	}
-
-	rds := redis.NewClient(rdsConfig)
-	defer rds.Close()
 
 	sql := sqlite.Open("test.db")
 	db, sqlDB, err := repositories.ConnectDatabase(sql, &gorm.Config{Logger: gormLogger.Default.LogMode(gormLogger.Silent)}, &models.Deployment{})
