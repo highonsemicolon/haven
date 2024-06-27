@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -11,6 +10,7 @@ import (
 	"github.com/onkarr19/haven/deployment-handler-service/repositories"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
+	"github.com/sirupsen/logrus"
 )
 
 type DeploymentService interface {
@@ -21,10 +21,11 @@ type DeploymentService interface {
 type deploymentService struct {
 	deploymentRepo repositories.DeploymentRepository
 	rds            *redis.Client
+	logger         *logrus.Logger
 }
 
-func NewDeploymentService(deploymentRepo repositories.DeploymentRepository, redis *redis.Client) DeploymentService {
-	return &deploymentService{deploymentRepo: deploymentRepo, rds: redis}
+func NewDeploymentService(deploymentRepo repositories.DeploymentRepository, redis *redis.Client, logger *logrus.Logger) DeploymentService {
+	return &deploymentService{deploymentRepo: deploymentRepo, rds: redis, logger: logger}
 }
 
 func (s *deploymentService) CreateDeployment(deployment *models.Deployment) error {
@@ -36,6 +37,7 @@ func (s *deploymentService) CreateDeploymentbackup(deployment *models.Deployment
 	// Generate a presigned URL
 	presignedURL, err := putPresignURL(deployment.Name)
 	if err != nil {
+		s.logger.Error("Failed to generate presigned URL:", err)
 		return errors.Wrap(err, "error generating presigned URL")
 	}
 
@@ -61,11 +63,10 @@ func (s *deploymentService) CreateDeploymentbackup(deployment *models.Deployment
 	resp, err := cli.ContainerCreate(ctx, config, nil, nil, nil, "")
 	if err != nil {
 		return errors.Wrap(err, "error creating Docker container")
-
 	}
 	defer func() {
 		if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
-			log.Println("Failed to remove container:", err)
+			s.logger.Error("Failed to remove container:", err)
 		}
 	}()
 

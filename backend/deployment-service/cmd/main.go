@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/onkarr19/haven/deployment-handler-service/handlers"
@@ -12,15 +10,20 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
-	"gorm.io/gorm/logger"
+	gormLogger "gorm.io/gorm/logger"
 
 	"gorm.io/gorm"
 )
 
+var logger *logrus.Logger
+
 func init() {
+	logger = logrus.New()
+	defer logger.Writer().Close()
+
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+		logger.Errorf("Error loading .env file: %v", err)
 	}
 }
 
@@ -32,6 +35,7 @@ func ErrorHandler(c *gin.Context) {
 }
 
 func main() {
+
 	r := gin.Default()
 	r.Use(ErrorHandler)
 
@@ -45,12 +49,17 @@ func main() {
 	defer rds.Close()
 
 	sql := sqlite.Open("test.db")
-	db, sqlDB := repositories.ConnectDatabase(sql, &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)}, &models.Deployment{})
+	db, sqlDB, err := repositories.ConnectDatabase(sql, &gorm.Config{Logger: gormLogger.Default.LogMode(gormLogger.Silent)}, &models.Deployment{})
 	defer sqlDB.Close()
+	if err != nil {
+		logger.Fatalf("failed to connect database: %+v", err)
+	} else {
+		logger.Info("Database connected")
+	}
 
 	deploymentRepository := repositories.NewDeploymentRepository(db)
-	deploymentService := services.NewDeploymentService(deploymentRepository, rds)
-	deploymentHandler := handlers.NewDeploymentHandler(deploymentService, logrus.New())
+	deploymentService := services.NewDeploymentService(deploymentRepository, rds, logger)
+	deploymentHandler := handlers.NewDeploymentHandler(deploymentService, logger)
 
 	r.POST("/project", deploymentHandler.CreateDeployment)
 	r.GET("/project/:name", deploymentHandler.GetDeployment)

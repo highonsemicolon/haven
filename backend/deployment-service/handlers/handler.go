@@ -31,7 +31,7 @@ func (h *DeploymentHandler) CreateDeployment(c *gin.Context) {
 	existingDeployment, _ := h.deploymentService.GetDeploymentByName(deployment.Name)
 	if existingDeployment != nil {
 		h.logger.Errorf("deployment with name %s already exists", deployment.Name)
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("deployment with name %s already exists", deployment.Name)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Errorf("deployment with name %s already exists", deployment.Name).Error()})
 		return
 	}
 
