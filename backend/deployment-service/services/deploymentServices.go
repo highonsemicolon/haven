@@ -35,6 +35,10 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 	if _, err := s.rds.RPush(context.Background(), "builder", job).Result(); err != nil {
 		return errors.Wrap(err, "error pushing job to Redis")
 	}
+
+	if err := s.deploymentRepo.CreateDeployment(deployment); err != nil {
+		return errors.Wrap(err, "error saving deployment to repository")
+	}
 	return nil
 }
 
