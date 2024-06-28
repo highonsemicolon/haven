@@ -1,4 +1,4 @@
-module github.com/highonsemicolon/haven/backend/shared
+module github.com/highonsemicolon/haven/backend/shared/utils
 
 go 1.22.4
 
