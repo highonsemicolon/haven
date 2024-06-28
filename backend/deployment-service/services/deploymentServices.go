@@ -21,7 +21,6 @@ type DeploymentService interface {
 type deploymentService struct {
 	deploymentRepo repositories.DeploymentRepository
 	rds            *redis.Client
-	ctx            context.Context
 }
 
 func NewDeploymentService(deploymentRepo repositories.DeploymentRepository, redis *redis.Client) DeploymentService {
@@ -33,7 +32,7 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 	if err != nil {
 		return errors.Wrap(err, "error marshalling job to JSON")
 	}
-	if _, err := s.rds.RPush(s.ctx, "builder", job).Result(); err != nil {
+	if _, err := s.rds.RPush(context.Background(), "builder", job).Result(); err != nil {
 		return errors.Wrap(err, "error pushing job to Redis")
 	}
 	return nil
