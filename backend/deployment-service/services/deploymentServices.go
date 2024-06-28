@@ -2,14 +2,15 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/onkarr19/haven/deployment-handler-service/models"
 	"github.com/onkarr19/haven/deployment-handler-service/repositories"
 	"github.com/pkg/errors"
+	"github.com/redis/go-redis/v9"
 )
 
 type DeploymentService interface {
@@ -19,13 +20,26 @@ type DeploymentService interface {
 
 type deploymentService struct {
 	deploymentRepo repositories.DeploymentRepository
+	rds            *redis.Client
+	ctx            context.Context
 }
 
-func NewDeploymentService(deploymentRepo repositories.DeploymentRepository) DeploymentService {
-	return &deploymentService{deploymentRepo: deploymentRepo}
+func NewDeploymentService(deploymentRepo repositories.DeploymentRepository, redis *redis.Client) DeploymentService {
+	return &deploymentService{deploymentRepo: deploymentRepo, rds: redis}
 }
 
 func (s *deploymentService) CreateDeployment(deployment *models.Deployment) error {
+	job, err := json.Marshal(deployment)
+	if err != nil {
+		return errors.Wrap(err, "error marshalling job to JSON")
+	}
+	if _, err := s.rds.RPush(s.ctx, "builder", job).Result(); err != nil {
+		return errors.Wrap(err, "error pushing job to Redis")
+	}
+	return nil
+}
+
+func (s *deploymentService) CreateDeploymentbackup(deployment *models.Deployment) error {
 
 	// Generate a presigned URL
 	presignedURL, err := putPresignURL(deployment.Name)
@@ -55,11 +69,10 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 	resp, err := cli.ContainerCreate(ctx, config, nil, nil, nil, "")
 	if err != nil {
 		return errors.Wrap(err, "error creating Docker container")
-
 	}
 	defer func() {
 		if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
-			log.Println("Failed to remove container:", err)
+			errors.Wrap(err, "error removing Docker container")
 		}
 	}()
 
