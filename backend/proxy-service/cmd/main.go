@@ -10,6 +10,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var logger *logrus.Logger
+
+func init() {
+	logger = logrus.New()
+	defer logger.Writer().Close()
+}
+
 func ErrorHandler(c *gin.Context) {
 	c.Next()
 	if len(c.Errors) > 0 {
@@ -24,8 +31,8 @@ func main() {
 	base_path := os.Getenv("BASE_PATH")
 
 	s3Repo := repositories.NewProxyRepository(base_path)
-	requestService := services.NewProxyService(s3Repo, logrus.New())
-	requestHandler := handlers.NewProxyHandler(requestService)
+	requestService := services.NewProxyService(s3Repo)
+	requestHandler := handlers.NewProxyHandler(requestService, logger)
 
 	r.NoRoute(requestHandler.HandleProxy)
 
