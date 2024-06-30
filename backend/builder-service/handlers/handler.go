@@ -9,10 +9,10 @@ import (
 
 type Handler struct {
 	logger  *logrus.Logger
-	service *services.BrokerService
+	service services.BrokerService
 }
 
-func NewHandler(logger *logrus.Logger, service *services.BrokerService) *Handler {
+func NewHandler(logger *logrus.Logger, service services.BrokerService) *Handler {
 	return &Handler{logger: logger, service: service}
 }
 
