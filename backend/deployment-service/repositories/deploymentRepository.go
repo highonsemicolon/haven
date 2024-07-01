@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"github.com/onkarr19/haven/deployment-handler-service/models"
+	"github.com/onkarr19/haven/deployment-service/models"
 	"gorm.io/gorm"
 )
 

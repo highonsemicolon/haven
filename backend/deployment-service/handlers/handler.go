@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/onkarr19/haven/deployment-handler-service/models"
-	"github.com/onkarr19/haven/deployment-handler-service/services"
+	"github.com/onkarr19/haven/deployment-service/models"
+	"github.com/onkarr19/haven/deployment-service/services"
 	"github.com/sirupsen/logrus"
 )
 
