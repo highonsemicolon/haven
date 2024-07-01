@@ -32,7 +32,8 @@ func (s *deploymentService) CreateDeployment(deployment *models.Deployment) erro
 	if err != nil {
 		return errors.Wrap(err, "error marshalling job to JSON")
 	}
-	if _, err := s.rds.RPush(context.Background(), "builder", job).Result(); err != nil {
+
+	if _, err := s.rds.RPush(context.Background(), "builder-input", job).Result(); err != nil {
 		return errors.Wrap(err, "error pushing job to Redis")
 	}
 
