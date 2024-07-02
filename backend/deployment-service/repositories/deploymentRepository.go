@@ -32,7 +32,7 @@ func (r *deploymentRepository) CreateDeployment(ctx context.Context, deployment 
 		return errors.Wrap(err, "error marshalling job to JSON")
 	}
 
-	inputQueue := os.Getenv("INOUT_QUEUE")
+	inputQueue := os.Getenv("BUILDER_QUEUE")
 
 	if _, err := r.rds.RPush(ctx, inputQueue, job).Result(); err != nil {
 		return errors.Wrap(err, "error pushing job to Redis")
