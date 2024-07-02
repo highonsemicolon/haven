@@ -36,11 +36,10 @@ func init() {
 
 	rds = redis.NewClient(rdsConfig)
 
-	pong, err := rds.Ping(context.Background()).Result()
+	_, err = rds.Ping(context.Background()).Result()
 	if err != nil {
 		logger.Fatalf("Could not connect to Redis: %v", err)
 	}
-	logger.Println(pong)
 }
 
 func ErrorHandler(c *gin.Context) {
@@ -72,12 +71,14 @@ func main() {
 		defer logger.Writer().Close()
 	}()
 
-	deploymentRepository := repositories.NewDeploymentRepository(db)
-	deploymentService := services.NewDeploymentService(deploymentRepository, rds)
+	deploymentRepository := repositories.NewDeploymentRepository(db, rds)
+	deploymentService := services.NewDeploymentService(deploymentRepository)
 	deploymentHandler := handlers.NewDeploymentHandler(deploymentService, logger)
 
 	r.POST("/project", deploymentHandler.CreateDeployment)
 	r.GET("/project/:name", deploymentHandler.GetDeployment)
+
+	r.GET("/ws/logs/:id", deploymentHandler.HandleWebSocket)
 
 	r.Run("localhost:8080")
 }
