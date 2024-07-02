@@ -4,9 +4,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/onkarr19/haven/proxy-service/handlers"
-	"github.com/onkarr19/haven/proxy-service/repositories"
-	"github.com/onkarr19/haven/proxy-service/services"
+	"github.com/highonsemicolon/haven/proxy-service/handlers"
+	"github.com/highonsemicolon/haven/proxy-service/repositories"
+	"github.com/highonsemicolon/haven/proxy-service/services"
 	"github.com/sirupsen/logrus"
 )
 

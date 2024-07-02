@@ -1,7 +1,7 @@
 package services
 
 import (
-	"github.com/onkarr19/haven/proxy-service/repositories"
+	"github.com/highonsemicolon/haven/proxy-service/repositories"
 )
 
 type ProxyService interface {

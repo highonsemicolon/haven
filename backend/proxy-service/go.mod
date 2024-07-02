@@ -1,4 +1,4 @@
-module github.com/onkarr19/haven/proxy-service
+module github.com/highonsemicolon/haven/proxy-service
 
 go 1.22.4
 

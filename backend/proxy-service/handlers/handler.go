@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/onkarr19/haven/proxy-service/services"
+	"github.com/highonsemicolon/haven/proxy-service/services"
 	"github.com/sirupsen/logrus"
 )
 

@@ -1,4 +1,4 @@
-module github.com/onkarr19/haven/builder-service
+module github.com/highonsemicolon/haven/builder-service
 
 go 1.22.4
 

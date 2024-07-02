@@ -7,8 +7,8 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"github.com/onkarr19/haven/builder-service/models"
-	"github.com/onkarr19/haven/builder-service/repositories"
+	"github.com/highonsemicolon/haven/builder-service/models"
+	"github.com/highonsemicolon/haven/builder-service/repositories"
 	"github.com/pkg/errors"
 )
 

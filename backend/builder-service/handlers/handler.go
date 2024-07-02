@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/onkarr19/haven/builder-service/models"
-	"github.com/onkarr19/haven/builder-service/services"
+	"github.com/highonsemicolon/haven/builder-service/models"
+	"github.com/highonsemicolon/haven/builder-service/services"
 	"github.com/sirupsen/logrus"
 )
 

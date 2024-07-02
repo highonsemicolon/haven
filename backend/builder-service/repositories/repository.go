@@ -3,7 +3,7 @@ package repositories
 import (
 	"context"
 
-	"github.com/onkarr19/haven/builder-service/models"
+	"github.com/highonsemicolon/haven/builder-service/models"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
