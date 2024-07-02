@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 
@@ -12,9 +13,9 @@ import (
 )
 
 type BrokerService interface {
-	Receive(ctx context.Context) (string, error)
-	Send(ctx context.Context, message []byte) error
-	Process(ctx context.Context, message string) string
+	Receive(context.Context) (string, error)
+	Send(context.Context, []byte) error
+	PublishLogs(context.Context, string, []byte) error
 
 	GetDeploymentByName(name string) (*models.Builder, error)
 	CreateBuild(deployment *models.Builder) error
@@ -34,10 +35,6 @@ func (s *brokerService) Receive(ctx context.Context) (string, error) {
 
 func (s *brokerService) Send(ctx context.Context, message []byte) error {
 	return s.brokerRepository.Push(ctx, message)
-}
-
-func (s *brokerService) Process(ctx context.Context, message string) string {
-	return message
 }
 
 func (s *brokerService) CreateBuild(deployment *models.Builder) error {
@@ -82,6 +79,19 @@ func (s *brokerService) CreateBuild(deployment *models.Builder) error {
 		return errors.Wrap(err, "error starting Docker container")
 	}
 
+	logsReader, err := cli.ContainerLogs(ctx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true, Follow: true})
+	if err != nil {
+		return errors.Wrap(err, "error fetching container logs")
+	}
+	defer logsReader.Close()
+
+	func() {
+		scanner := bufio.NewScanner(logsReader)
+		for scanner.Scan() {
+			s.PublishLogs(ctx, deployment.Name, []byte(scanner.Text()))
+		}
+	}()
+
 	// Wait for the container to finish
 	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
@@ -108,4 +118,8 @@ func (s *brokerService) GetDeploymentByName(name string) (*models.Builder, error
 		return nil, errors.Wrap(err, "error getting deployment by name")
 	}
 	return deployment, nil
+}
+
+func (s *brokerService) PublishLogs(ctx context.Context, channel string, logs []byte) error {
+	return s.brokerRepository.Publish(ctx, channel, logs)
 }

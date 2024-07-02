@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"log"
 
 	"github.com/onkarr19/haven/builder-service/models"
 	"github.com/onkarr19/haven/builder-service/services"
@@ -38,8 +37,6 @@ func (h *Handler) Listen(ctx context.Context) error {
 			h.logger.Errorf("deployment with namde %s already exists", deployment.Name)
 			continue
 		}
-
-		log.Println(input)
 
 		if err := h.service.CreateBuild(&deployment); err != nil {
 			h.logger.Errorf("Error while building: %s", err)

@@ -9,8 +9,9 @@ import (
 )
 
 type Repository interface {
-	Pop(ctx context.Context) (string, error)
-	Push(ctx context.Context, message []byte) error
+	Pop(context.Context) (string, error)
+	Push(context.Context, []byte) error
+	Publish(context.Context, string, []byte) error
 
 	GetDeploymentByName(name string) (*models.Builder, error)
 	CreateDeployment(deployment *models.Builder) error
@@ -42,6 +43,10 @@ func (r *brokerRepository) Pop(ctx context.Context) (string, error) {
 
 func (r *brokerRepository) Push(ctx context.Context, message []byte) error {
 	return r.rds.RPush(ctx, r.outputQueue, message).Err()
+}
+
+func (r *brokerRepository) Publish(ctx context.Context, channel string, message []byte) error {
+	return r.rds.Publish(ctx, channel, message).Err()
 }
 
 func (r *brokerRepository) GetDeploymentByName(name string) (*models.Builder, error) {
