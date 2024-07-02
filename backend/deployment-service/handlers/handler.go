@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"github.com/onkarr19/haven/deployment-service/models"
 	"github.com/onkarr19/haven/deployment-service/services"
 	"github.com/sirupsen/logrus"
@@ -14,6 +15,14 @@ import (
 type DeploymentHandler struct {
 	deploymentService services.DeploymentService
 	logger            *logrus.Logger
+}
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 func NewDeploymentHandler(deploymentService services.DeploymentService, logger *logrus.Logger) *DeploymentHandler {
@@ -40,7 +49,7 @@ func (h *DeploymentHandler) CreateDeployment(c *gin.Context) {
 		deployment.Branch = "main"
 	}
 
-	if err := h.deploymentService.CreateDeployment(&deployment); err != nil {
+	if err := h.deploymentService.CreateDeployment(c.Request.Context(), &deployment); err != nil {
 		h.logger.Errorf("failed to create deployment: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create deployment"})
 		return
@@ -70,4 +79,35 @@ func (h *DeploymentHandler) GetDeployment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, deployment)
+}
+
+func (h *DeploymentHandler) HandleWebSocket(c *gin.Context) {
+	deploymentID := c.Param("id")
+	if deploymentID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Deployment ID is required"})
+		return
+	}
+
+	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		h.logger.Errorf("failed to upgrade connection: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upgrade connection"})
+		return
+	}
+	defer ws.Close()
+
+	ctx := c.Request.Context()
+	logs, err := h.deploymentService.StreamLogs(ctx, deploymentID)
+	if err != nil {
+		h.logger.Errorf("failed to stream logs: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to stream logs"})
+		return
+	}
+
+	for log := range logs {
+		if err := ws.WriteMessage(websocket.TextMessage, []byte(log)); err != nil {
+			h.logger.Errorf("failed to write message: %v", err)
+			return
+		}
+	}
 }
