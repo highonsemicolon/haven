@@ -105,7 +105,7 @@ func (h *DeploymentHandler) HandleWebSocket(c *gin.Context) {
 	}
 
 	for log := range logs {
-		if err := ws.WriteMessage(websocket.TextMessage, []byte(log)); err != nil {
+		if err := ws.WriteMessage(websocket.BinaryMessage, []byte(log)); err != nil {
 			h.logger.Errorf("failed to write message: %v", err)
 			return
 		}
