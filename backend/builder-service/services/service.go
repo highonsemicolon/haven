@@ -3,6 +3,7 @@ package services
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/docker/docker/api/types/container"
@@ -17,8 +18,9 @@ type BrokerService interface {
 	Send(context.Context, []byte) error
 	PublishLogs(context.Context, string, []byte) error
 
-	GetDeploymentByName(name string) (*models.Builder, error)
-	CreateBuild(deployment *models.Builder) error
+	GetDeploymentByName(string) (*models.Builder, error)
+	CreateBuild(*models.Builder) error
+	PrepareBuild(string) ([]byte, error)
 }
 
 type brokerService struct {
@@ -122,4 +124,23 @@ func (s *brokerService) GetDeploymentByName(name string) (*models.Builder, error
 
 func (s *brokerService) PublishLogs(ctx context.Context, channel string, logs []byte) error {
 	return s.brokerRepository.Publish(ctx, channel, logs)
+}
+
+func (s *brokerService) PrepareBuild(input string) ([]byte, error) {
+
+	deployment := &models.Builder{}
+	if err := json.Unmarshal([]byte(input), &deployment); err != nil {
+		return nil, err
+	}
+
+	existingDeployment, err := s.GetDeploymentByName(deployment.Name)
+	if existingDeployment != nil {
+		return nil, err
+	}
+
+	if err := s.CreateBuild(deployment); err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(deployment)
 }

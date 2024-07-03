@@ -2,9 +2,7 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 
-	"github.com/highonsemicolon/haven/builder-service/models"
 	"github.com/highonsemicolon/haven/builder-service/services"
 	"github.com/sirupsen/logrus"
 )
@@ -26,26 +24,11 @@ func (h *Handler) Listen(ctx context.Context) error {
 			continue
 		}
 
-		deployment := models.Builder{}
-		if err := json.Unmarshal([]byte(input), &deployment); err != nil {
-			h.logger.Errorf("Error unmarshaling JSON: %v", err)
-			continue
-		}
-
-		existingDeployment, _ := h.service.GetDeploymentByName(deployment.Name)
-		if existingDeployment != nil {
-			h.logger.Errorf("deployment with namde %s already exists", deployment.Name)
-			continue
-		}
-
-		if err := h.service.CreateBuild(&deployment); err != nil {
-			h.logger.Errorf("Error while building: %s", err)
-			continue
-		}
-
-		output, err := json.Marshal(deployment)
-		if err != nil {
-			h.logger.Errorf("Error marshalling job to JSON: %v", err)
+		var output []byte
+		if output, err = h.service.PrepareBuild(input); err != nil {
+			if err := h.service.Send(ctx, []byte(err.Error())); err != nil {
+				h.logger.Errorf("Error sending message: %v", err)
+			}
 			continue
 		}
 
