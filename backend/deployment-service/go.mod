@@ -1,4 +1,4 @@
-module github.com/onkarr19/haven/deployment-service
+module github.com/highonsemicolon/haven/deployment-service
 
 go 1.22.3
 

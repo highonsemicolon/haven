@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/onkarr19/haven/deployment-service/models"
-	"github.com/onkarr19/haven/deployment-service/services"
+	"github.com/highonsemicolon/haven/deployment-service/models"
+	"github.com/highonsemicolon/haven/deployment-service/services"
 	"github.com/sirupsen/logrus"
 )
 

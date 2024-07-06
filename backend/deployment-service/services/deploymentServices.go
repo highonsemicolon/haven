@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 
-	"github.com/onkarr19/haven/deployment-service/models"
-	"github.com/onkarr19/haven/deployment-service/repositories"
+	"github.com/highonsemicolon/haven/deployment-service/models"
+	"github.com/highonsemicolon/haven/deployment-service/repositories"
 )
 
 type DeploymentService interface {

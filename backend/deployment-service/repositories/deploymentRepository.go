@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/onkarr19/haven/deployment-service/models"
+	"github.com/highonsemicolon/haven/deployment-service/models"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
