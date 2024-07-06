@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -12,9 +13,8 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
-	gormLogger "gorm.io/gorm/logger"
-
 	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
 )
 
 var logger *logrus.Logger
@@ -28,17 +28,16 @@ func init() {
 		logger.Errorf("Error loading .env file: %v", err)
 	}
 
-	rdsConfig := &redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
+	addr, err := redis.ParseURL(os.Getenv("REDIS_URI"))
+	if err != nil {
+		logger.Panicf("Could not parse Redis URI: %v", err)
 	}
 
-	rds = redis.NewClient(rdsConfig)
+	rds = redis.NewClient(addr)
 
 	_, err = rds.Ping(context.Background()).Result()
 	if err != nil {
-		logger.Fatalf("Could not connect to Redis: %v", err)
+		logger.Panicf("Could not connect to Redis: %v", err)
 	}
 }
 
@@ -54,7 +53,8 @@ func main() {
 	r := gin.Default()
 	r.Use(ErrorHandler)
 
-	sql := sqlite.Open("test.db")
+	dsn := os.Getenv("DSN_URI")
+	sql := sqlite.Open(dsn)
 	db, sqlDB, err := repositories.ConnectDatabase(sql, &gorm.Config{Logger: gormLogger.Default.LogMode(gormLogger.Silent)}, &models.Deployment{})
 	if err != nil {
 		logger.Fatalf("failed to connect database: %+v", err)

@@ -4,11 +4,11 @@ import (
 	"context"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/highonsemicolon/haven/builder-service/handlers"
 	"github.com/highonsemicolon/haven/builder-service/models"
 	"github.com/highonsemicolon/haven/builder-service/repositories"
 	"github.com/highonsemicolon/haven/builder-service/services"
+	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
@@ -28,19 +28,17 @@ func init() {
 
 	logger = logrus.New()
 
-	rdsConfig := &redis.Options{
-		Addr:     os.Getenv("REDIS_ADDR"),
-		Password: os.Getenv("REDIS_PASSWORD"),
-		DB:       0,
-	}
-
-	rds = redis.NewClient(rdsConfig)
-
-	pong, err := rds.Ping(ctx).Result()
+	addr, err := redis.ParseURL(os.Getenv("REDIS_URI"))
 	if err != nil {
-		logger.Fatalf("Could not connect to Redis: %v", err)
+		logger.Panicf("Could not parse Redis URI: %v", err)
 	}
-	logger.Println(pong)
+
+	rds = redis.NewClient(addr)
+
+	_, err = rds.Ping(ctx).Result()
+	if err != nil {
+		logger.Panicf("Could not connect to Redis: %v", err)
+	}
 }
 
 func main() {
@@ -48,7 +46,8 @@ func main() {
 	inputQueue := os.Getenv("INPUT_QUEUE")
 	outputQueue := os.Getenv("OUTPUT_QUEUE")
 
-	sql := sqlite.Open("test.db")
+	dsn := os.Getenv("DSN_URI")
+	sql := sqlite.Open(dsn)
 	db, sqlDB, err := repositories.ConnectDatabase(sql, &gorm.Config{Logger: gormLogger.Default.LogMode(gormLogger.Silent)}, &models.Builder{})
 	if err != nil {
 		logger.Fatalf("failed to connect database: %+v", err)
