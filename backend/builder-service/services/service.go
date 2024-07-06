@@ -25,10 +25,11 @@ type BrokerService interface {
 
 type brokerService struct {
 	brokerRepository repositories.Repository
+	closingChannel   string
 }
 
-func NewBrokerService(repo repositories.Repository) BrokerService {
-	return &brokerService{brokerRepository: repo}
+func NewBrokerService(repo repositories.Repository, closingChannel string) BrokerService {
+	return &brokerService{brokerRepository: repo, closingChannel: closingChannel}
 }
 
 func (s *brokerService) Receive(ctx context.Context) (string, error) {
@@ -36,7 +37,7 @@ func (s *brokerService) Receive(ctx context.Context) (string, error) {
 }
 
 func (s *brokerService) Send(ctx context.Context, message []byte) error {
-	return s.brokerRepository.Push(ctx, message)
+	return s.brokerRepository.Publish(ctx, s.closingChannel, []byte(message))
 }
 
 func (s *brokerService) CreateBuild(deployment *models.Builder) error {
@@ -142,5 +143,5 @@ func (s *brokerService) PrepareBuild(input string) ([]byte, error) {
 		return nil, err
 	}
 
-	return json.Marshal(deployment)
+	return []byte(deployment.Name), nil
 }

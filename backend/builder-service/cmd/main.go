@@ -66,7 +66,7 @@ func main() {
 	}()
 
 	repo := repositories.NewBrokerRepository(db, rds, inputQueue, outputQueue)
-	service := services.NewBrokerService(repo)
+	service := services.NewBrokerService(repo, os.Getenv("CLOSING_CHANNEL"))
 	handler := handlers.NewHandler(logger, service)
 
 	if err := handler.Listen(ctx); err != nil {

@@ -79,6 +79,7 @@ func main() {
 	r.GET("/project/:name", deploymentHandler.GetDeployment)
 
 	r.GET("/ws/logs/:id", deploymentHandler.HandleWebSocket)
+	go deploymentService.ListenForCloseMessages(os.Getenv("CLOSING_CHANNEL"))
 
 	r.Run("localhost:8080")
 }

@@ -96,6 +96,9 @@ func (h *DeploymentHandler) HandleWebSocket(c *gin.Context) {
 	}
 	defer ws.Close()
 
+	h.deploymentService.AddConnection(deploymentID, ws)
+	defer h.deploymentService.RemoveConnection(deploymentID)
+
 	ctx := c.Request.Context()
 	logs, err := h.deploymentService.StreamLogs(ctx, deploymentID)
 	if err != nil {

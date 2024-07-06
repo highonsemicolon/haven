@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/highonsemicolon/haven/deployment-service/models"
@@ -14,7 +15,8 @@ import (
 type DeploymentRepository interface {
 	CreateDeployment(context.Context, *models.Deployment) error
 	GetDeploymentByName(string) (*models.Deployment, error)
-	StreamLogs(ctx context.Context, id string) (<-chan string, error)
+	StreamLogs(context.Context, string) (<-chan string, error)
+	Subscribe(string) <-chan string
 }
 
 type deploymentRepository struct {
@@ -64,4 +66,24 @@ func (r *deploymentRepository) StreamLogs(ctx context.Context, id string) (<-cha
 		}
 	}()
 	return logChannel, nil
+}
+
+func (r *deploymentRepository) Subscribe(channel string) <-chan string {
+	ctx := context.Background()
+	pubsub := r.rds.Subscribe(ctx, channel)
+	ch := make(chan string)
+
+	go func() {
+		for {
+			msg, err := pubsub.ReceiveMessage(ctx)
+			if err != nil {
+				fmt.Println("error receiving message:", err)
+				continue
+			}
+
+			ch <- msg.Payload
+		}
+	}()
+
+	return ch
 }
